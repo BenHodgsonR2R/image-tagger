@@ -1,4 +1,6 @@
 packages:
+  # The root is the published package. changesets only versions workspace packages.
+  - "."
   - example
 
 # Dependencies allowed to run install scripts.

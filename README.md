@@ -116,8 +116,6 @@ The vocabulary maps category names to categories. Category and value names use l
 | `maxRequestBytes` | Default 4,000,000. The hosted API drops larger requests, so they're refused before sending.                  |
 | `userAgent`       | Sent as the User-Agent header.                                                                               |
 
-Amos takes 2 to 255 values per `single` or `multi` category, counting the none-of-these option that `allowUnlisted` adds. `AmosBackend` refuses anything else with `invalid-configuration` before sending. For a single value, use a `flag`.
-
 For tests, or another model, pass any object with `decide({ context, image, questions })` that returns `{ answers }`. See `TaggingBackend` for the shapes.
 
 ### Errors
@@ -126,7 +124,7 @@ For tests, or another model, pass any object with `decide({ context, image, ques
 
 | `code`                  | Meaning                                                                                                     |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `invalid-configuration` | Invalid vocabulary, backend options or `categories`, or a category the backend can't answer.                |
+| `invalid-configuration` | Invalid vocabulary, backend options or `categories`.                                                        |
 | `invalid-image`         | Unsupported image type, or an empty image. Nothing is sent.                                                 |
 | `request-too-large`     | The request is over `maxRequestBytes`. Send a smaller image.                                                |
 | `backend-failure`       | The request failed after retries. The original error is `error.cause`.                                      |
