@@ -189,114 +189,118 @@ export function App() {
       }
       footer={<SampleCredits />}
     >
-      <div class="grid items-start gap-4 md:grid-cols-2">
-        <VocabularyEditor
-          drafts={drafts}
-          onChange={setDrafts}
-          problems={setup.problems}
-          todo={setup.todo}
-        />
-
-        <Panel id="images-heading" title="2. Add images">
-          <p class="mb-2 text-sm text-muted">
-            Images you add are resized in your browser, then sent straight to
-            Amos's hosted API at api.amos.scira.ai, a third-party service. This
-            site has no server and stores nothing.
-          </p>
-          <label
-            class="mb-3 block cursor-pointer rounded-xl border-2 border-dashed border-line p-5 text-center text-sm font-medium text-muted hover:border-accent"
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              void addFiles(Array.from(event.dataTransfer?.files ?? []));
-            }}
-          >
-            <input
-              class="sr-only"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={(event) => {
-                void addFiles(Array.from(event.currentTarget.files ?? []));
-                event.currentTarget.value = "";
-              }}
-            />
-            Drop images here or <u>choose files</u>. Up to {maxImages}.
-          </label>
-          <SampleGallery
-            suggestedTheme={matchingStartingPoint(drafts)?.name}
-            added={new Set(images.map(({ name }) => name))}
-            onAdd={addFiles}
-            onError={setNotice}
+      <div class="grid grid-cols-1 items-start gap-4 md:grid-cols-5">
+        <div class="md:col-span-2">
+          <VocabularyEditor
+            drafts={drafts}
+            onChange={setDrafts}
+            problems={setup.problems}
+            todo={setup.todo}
           />
+        </div>
 
-          <h3 class="mt-4 mb-2 font-semibold">3. Tag your images</h3>
-          <div class="flex flex-wrap items-end gap-2">
-            <Field label="Model">
-              <Select
-                value={model}
-                onChange={(event) => setModel(event.currentTarget.value)}
-              >
-                {models.map((name) => (
-                  <option key={name}>{name}</option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Context (optional)" class="flex-1 basis-48">
-              <Input
-                value={context}
-                placeholder="e.g. Lead photo for a travel guide to Lisbon"
-                onInput={(event) => setContext(event.currentTarget.value)}
-              />
-            </Field>
-          </div>
-
-          <div class="mt-3 flex flex-wrap items-center gap-2">
-            <Button
-              disabled={running || tagHint !== undefined}
-              onClick={() => void tagAll()}
+        <div class="md:col-span-3">
+          <Panel id="images-heading" title="2. Add images">
+            <p class="mb-2 text-sm text-muted">
+              Images you add are resized in your browser, then sent straight to
+              Amos's hosted API at api.amos.scira.ai, a third-party service.
+              This site has no server and stores nothing.
+            </p>
+            <label
+              class="mb-3 block cursor-pointer rounded-xl border-2 border-dashed border-line p-5 text-center text-sm font-medium text-muted hover:border-accent"
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                void addFiles(Array.from(event.dataTransfer?.files ?? []));
+              }}
             >
-              {running ? "Tagging…" : tagButtonLabel(images.length)}
-            </Button>
-            {tagged && (
-              <Button variant="secondary" onClick={downloadRecords}>
-                Download records
-              </Button>
-            )}
-          </div>
-          {tagHint !== undefined && (
-            <p class="mt-1 text-sm text-muted">{tagHint}</p>
-          )}
-
-          {notice !== undefined && (
-            <Message tone="notice" class="mt-3">
-              {notice}
-            </Message>
-          )}
-          {stale && (
-            <Message tone="notice" class="mt-3">
-              Your tags, model or context changed since the last run. Tag the
-              images again to update the results.
-            </Message>
-          )}
-
-          <div class="mt-3 flex flex-col gap-3">
-            {images.length === 0 && (
-              <p class="rounded-md border border-dashed border-line p-4 text-center text-sm text-muted">
-                No images yet. Drop your own above or click a sample, then tag
-                them.
-              </p>
-            )}
-            {images.map((image) => (
-              <ImageResult
-                key={image.id}
-                image={image}
-                thresholds={thresholds}
-                onRemove={() => removeImage(image)}
+              <input
+                class="sr-only"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={(event) => {
+                  void addFiles(Array.from(event.currentTarget.files ?? []));
+                  event.currentTarget.value = "";
+                }}
               />
-            ))}
-          </div>
-        </Panel>
+              Drop images here or <u>choose files</u>. Up to {maxImages}.
+            </label>
+            <SampleGallery
+              suggestedTheme={matchingStartingPoint(drafts)?.name}
+              added={new Set(images.map(({ name }) => name))}
+              onAdd={addFiles}
+              onError={setNotice}
+            />
+
+            <h3 class="mt-4 mb-2 font-semibold">3. Tag your images</h3>
+            <div class="flex flex-wrap items-end gap-2">
+              <Field label="Model">
+                <Select
+                  value={model}
+                  onChange={(event) => setModel(event.currentTarget.value)}
+                >
+                  {models.map((name) => (
+                    <option key={name}>{name}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Context (optional)" class="flex-1 basis-48">
+                <Input
+                  value={context}
+                  placeholder="e.g. Lead photo for a travel guide to Lisbon"
+                  onInput={(event) => setContext(event.currentTarget.value)}
+                />
+              </Field>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <Button
+                disabled={running || tagHint !== undefined}
+                onClick={() => void tagAll()}
+              >
+                {running ? "Tagging…" : tagButtonLabel(images.length)}
+              </Button>
+              {tagged && (
+                <Button variant="secondary" onClick={downloadRecords}>
+                  Download records
+                </Button>
+              )}
+            </div>
+            {tagHint !== undefined && (
+              <p class="mt-1 text-sm text-muted">{tagHint}</p>
+            )}
+
+            {notice !== undefined && (
+              <Message tone="notice" class="mt-3">
+                {notice}
+              </Message>
+            )}
+            {stale && (
+              <Message tone="notice" class="mt-3">
+                Your tags, model or context changed since the last run. Tag the
+                images again to update the results.
+              </Message>
+            )}
+
+            <div class="mt-3 flex flex-col gap-3">
+              {images.length === 0 && (
+                <p class="rounded-md border border-dashed border-line p-4 text-center text-sm text-muted">
+                  No images yet. Drop your own above or click a sample, then tag
+                  them.
+                </p>
+              )}
+              {images.map((image) => (
+                <ImageResult
+                  key={image.id}
+                  image={image}
+                  thresholds={thresholds}
+                  onRemove={() => removeImage(image)}
+                />
+              ))}
+            </div>
+          </Panel>
+        </div>
       </div>
     </Page>
   );

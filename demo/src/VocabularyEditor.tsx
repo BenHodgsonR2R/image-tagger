@@ -12,6 +12,7 @@ import {
   type CategoryDraft,
   type CategoryType,
   fromVocabulary,
+  isUnfinished,
   newCategory,
   newValue,
   matchingStartingPoint,
@@ -33,6 +34,16 @@ export function VocabularyEditor({ drafts, onChange, problems, todo }: Props) {
   const [json, setJson] = useState<string>();
   const [jsonError, setJsonError] = useState<string>();
   const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState<ReadonlySet<number>>(new Set());
+
+  const toggle = (id: number) =>
+    setOpen((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) {
+        next.add(id);
+      }
+      return next;
+    });
 
   // The URL already carries the tags, so sharing is copying it.
   const copyLink = async () => {
@@ -55,6 +66,7 @@ export function VocabularyEditor({ drafts, onChange, problems, todo }: Props) {
       return;
     }
     onChange(fromVocabulary(parsed.vocabulary));
+    setOpen(new Set());
     setJson(undefined);
     setJsonError(undefined);
   };
@@ -68,7 +80,10 @@ export function VocabularyEditor({ drafts, onChange, problems, todo }: Props) {
     ) {
       return;
     }
-    onChange(build());
+    const next = build();
+    onChange(next);
+    // An empty start is opened for editing; a preset is ready to use as it is.
+    setOpen(new Set(next.filter(isUnfinished).map(({ id }) => id)));
     setJson(undefined);
     setJsonError(undefined);
   };
@@ -126,6 +141,8 @@ export function VocabularyEditor({ drafts, onChange, problems, todo }: Props) {
             <CategoryCard
               key={draft.id}
               draft={draft}
+              expanded={open.has(draft.id)}
+              onToggle={() => toggle(draft.id)}
               onChange={(change) => update(draft.id, change)}
               onRemove={() =>
                 onChange(drafts.filter(({ id }) => id !== draft.id))
@@ -135,7 +152,11 @@ export function VocabularyEditor({ drafts, onChange, problems, todo }: Props) {
           <Button
             variant="secondary"
             class="w-full"
-            onClick={() => onChange([...drafts, newCategory()])}
+            onClick={() => {
+              const added = newCategory();
+              onChange([...drafts, added]);
+              setOpen((current) => new Set([...current, added.id]));
+            }}
           >
             Add a category
           </Button>
@@ -191,11 +212,19 @@ function isCategoryType(value: string): value is CategoryType {
 
 type CardProps = {
   draft: CategoryDraft;
+  expanded: boolean;
+  onToggle: () => void;
   onChange: (change: Partial<CategoryDraft>) => void;
   onRemove: () => void;
 };
 
-function CategoryCard({ draft, onChange, onRemove }: CardProps) {
+function CategoryCard({
+  draft,
+  expanded,
+  onToggle,
+  onChange,
+  onRemove,
+}: CardProps) {
   const updateValue = (id: number, change: Partial<ValueDraft>) =>
     onChange({
       values: draft.values.map((value) =>
@@ -214,38 +243,39 @@ function CategoryCard({ draft, onChange, onRemove }: CardProps) {
     });
 
   return (
-    <fieldset class="mb-3 flex flex-col gap-2.5 rounded-xl border border-line p-3">
-      <legend class="sr-only">{draft.name || "New category"}</legend>
-      <div class="flex flex-wrap items-end gap-2">
-        <Field label="Category" class="flex-1 basis-40">
-          <Input
-            class="font-mono"
-            value={draft.name}
-            placeholder="e.g. people"
-            onInput={(event) =>
-              onChange({ name: toTagName(event.currentTarget.value) })
-            }
-          />
-        </Field>
-        <Field label="Answer">
-          <Select
-            value={draft.type}
-            onChange={(event) => {
-              const type = event.currentTarget.value;
-              if (isCategoryType(type)) {
-                changeType(type);
-              }
-            }}
+    <div class="mb-2 rounded-xl border border-line">
+      <div class="flex items-center gap-2 py-1.5 pr-1.5 pl-3">
+        <button
+          type="button"
+          class="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
+          aria-expanded={expanded}
+          aria-controls={`category-${draft.id}`}
+          onClick={onToggle}
+        >
+          <span
+            aria-hidden="true"
+            class={`text-muted transition-transform ${expanded ? "rotate-90" : ""}`}
           >
-            {Object.entries(typeLabels).map(([type, label]) => (
-              <option key={type} value={type}>
-                {label}
-              </option>
-            ))}
-          </Select>
-        </Field>
+            ›
+          </span>
+          <span class="shrink-0 font-mono text-sm font-semibold whitespace-nowrap">
+            {draft.name || "new category"}
+          </span>
+          <span class="hidden shrink-0 text-xs text-muted sm:inline">
+            {typeLabels[draft.type]}
+          </span>
+          <span class="truncate font-mono text-xs text-muted">
+            {summary(draft)}
+          </span>
+          {isUnfinished(draft) && (
+            <span class="shrink-0 rounded bg-notice-soft px-1.5 text-xs">
+              unfinished
+            </span>
+          )}
+        </button>
         <Button
           variant="icon"
+          size="sm"
           aria-label={`Remove ${draft.name || "this category"}`}
           onClick={onRemove}
         >
@@ -253,107 +283,162 @@ function CategoryCard({ draft, onChange, onRemove }: CardProps) {
         </Button>
       </div>
 
-      <Field label="Question">
-        <Input
-          value={draft.question}
-          placeholder={
-            draft.type === "flag"
-              ? "Required, e.g. Was the photo taken at night?"
-              : "Optional. Built from the category name when empty."
-          }
-          onInput={(event) => onChange({ question: event.currentTarget.value })}
-        />
-      </Field>
+      {expanded && (
+        <fieldset
+          id={`category-${draft.id}`}
+          class="flex flex-col gap-2.5 border-t border-line p-3"
+        >
+          <legend class="sr-only">{draft.name || "New category"}</legend>
+          <div class="flex flex-wrap items-end gap-2">
+            <Field label="Category" class="flex-1 basis-40">
+              <Input
+                class="font-mono"
+                value={draft.name}
+                placeholder="e.g. people"
+                onInput={(event) =>
+                  onChange({ name: toTagName(event.currentTarget.value) })
+                }
+              />
+            </Field>
+            <Field label="Answer">
+              <Select
+                value={draft.type}
+                onChange={(event) => {
+                  const type = event.currentTarget.value;
+                  if (isCategoryType(type)) {
+                    changeType(type);
+                  }
+                }}
+              >
+                {Object.entries(typeLabels).map(([type, label]) => (
+                  <option key={type} value={type}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
 
-      {draft.type !== "flag" && (
-        <div class="flex flex-col gap-1.5">
-          <span class="text-xs font-semibold text-muted">Values</span>
-          {draft.values.map((value) => (
-            <div class="flex flex-wrap gap-2" key={value.id}>
-              <Input
-                class="w-36 font-mono"
-                aria-label="Value"
-                value={value.name}
-                placeholder="value"
-                onInput={(event) =>
-                  updateValue(value.id, {
-                    name: toTagName(event.currentTarget.value),
-                  })
-                }
-              />
-              <Input
-                class="flex-1 basis-40"
-                aria-label="Description"
-                value={value.description}
-                placeholder="Description (optional)"
-                onInput={(event) =>
-                  updateValue(value.id, {
-                    description: event.currentTarget.value,
-                  })
-                }
-              />
+          <Field label="Question">
+            <Input
+              value={draft.question}
+              placeholder={
+                draft.type === "flag"
+                  ? "Required, e.g. Was the photo taken at night?"
+                  : "Optional. Built from the category name when empty."
+              }
+              onInput={(event) =>
+                onChange({ question: event.currentTarget.value })
+              }
+            />
+          </Field>
+
+          {draft.type !== "flag" && (
+            <div class="flex flex-col gap-1.5">
+              <span class="text-xs font-semibold text-muted">Values</span>
+              {draft.values.map((value) => (
+                <div class="flex flex-wrap gap-2" key={value.id}>
+                  <Input
+                    class="w-36 font-mono"
+                    aria-label="Value"
+                    value={value.name}
+                    placeholder="value"
+                    onInput={(event) =>
+                      updateValue(value.id, {
+                        name: toTagName(event.currentTarget.value),
+                      })
+                    }
+                  />
+                  <Input
+                    class="flex-1 basis-40"
+                    aria-label="Description"
+                    value={value.description}
+                    placeholder="Description (optional)"
+                    onInput={(event) =>
+                      updateValue(value.id, {
+                        description: event.currentTarget.value,
+                      })
+                    }
+                  />
+                  <Button
+                    variant="icon"
+                    aria-label={`Remove ${value.name || "this value"}`}
+                    onClick={() =>
+                      onChange({
+                        values: draft.values.filter(
+                          ({ id }) => id !== value.id,
+                        ),
+                      })
+                    }
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
               <Button
-                variant="icon"
-                aria-label={`Remove ${value.name || "this value"}`}
+                variant="link"
                 onClick={() =>
-                  onChange({
-                    values: draft.values.filter(({ id }) => id !== value.id),
-                  })
+                  onChange({ values: [...draft.values, newValue()] })
                 }
               >
-                ×
+                Add a value
               </Button>
             </div>
-          ))}
-          <Button
-            variant="link"
-            onClick={() => onChange({ values: [...draft.values, newValue()] })}
-          >
-            Add a value
-          </Button>
-        </div>
-      )}
+          )}
 
-      <div class="flex flex-wrap items-end gap-3">
-        <Field
-          class="flex-1 basis-48"
-          label={
-            draft.type === "single"
-              ? "Minimum confidence"
-              : "Apply a tag at probability"
-          }
-        >
-          <span class="flex h-control items-center gap-2">
-            <input
-              class="flex-1 accent-accent"
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={draft.threshold}
-              onInput={(event) =>
-                onChange({ threshold: Number(event.currentTarget.value) })
+          <div class="flex flex-wrap items-end gap-3">
+            <Field
+              class="flex-1 basis-48"
+              label={
+                draft.type === "single"
+                  ? "Minimum confidence"
+                  : "Apply a tag at probability"
               }
-            />
-            <output class="text-sm text-ink tabular-nums">
-              {draft.threshold.toFixed(2)}
-            </output>
-          </span>
-        </Field>
-        {draft.type !== "flag" && (
-          <label class="flex h-control items-center gap-1.5 text-sm">
-            <input
-              class="accent-accent"
-              type="checkbox"
-              checked={draft.allowUnlisted}
-              onChange={(event) =>
-                onChange({ allowUnlisted: event.currentTarget.checked })
-              }
-            />
-            Allow “none of these”
-          </label>
-        )}
-      </div>
-    </fieldset>
+            >
+              <span class="flex h-control items-center gap-2">
+                <input
+                  class="flex-1 accent-accent"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={draft.threshold}
+                  onInput={(event) =>
+                    onChange({ threshold: Number(event.currentTarget.value) })
+                  }
+                />
+                <output class="text-sm text-ink tabular-nums">
+                  {draft.threshold.toFixed(2)}
+                </output>
+              </span>
+            </Field>
+            {draft.type !== "flag" && (
+              <label class="flex h-control items-center gap-1.5 text-sm">
+                <input
+                  class="accent-accent"
+                  type="checkbox"
+                  checked={draft.allowUnlisted}
+                  onChange={(event) =>
+                    onChange({ allowUnlisted: event.currentTarget.checked })
+                  }
+                />
+                Allow “none of these”
+              </label>
+            )}
+          </div>
+        </fieldset>
+      )}
+    </div>
   );
+}
+
+/** A one-line description of a collapsed category. */
+function summary(draft: CategoryDraft): string {
+  if (draft.type === "flag") {
+    return draft.question;
+  }
+  return draft.values
+    .map(({ name }) => name)
+    .filter(Boolean)
+    .join(", ");
 }
