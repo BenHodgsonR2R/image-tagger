@@ -23,7 +23,6 @@ runs:
         # node-version, when given, takes precedence over the file.
         node-version: ${{ inputs.node-version }}
         node-version-file: .nvmrc
-        registry-url: "https://registry.npmjs.org"
         cache: ${{ inputs.cache == 'true' && 'pnpm' || '' }}
 
     - run: pnpm install --frozen-lockfile

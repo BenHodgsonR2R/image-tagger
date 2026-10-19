@@ -1,5 +1,5 @@
 {
-  "name": "image-tagger",
+  "name": "@bhodgson/image-tagger",
   "version": "0.1.0",
   "description": "Tags images from a vocabulary you define, with a decision model that returns a probability for every tag and never invents its own.",
   "keywords": [
@@ -9,6 +9,14 @@
     "vision",
     "amos"
   ],
+  "homepage": "https://github.com/BenHodgsonR2R/image-tagger#readme",
+  "bugs": {
+    "url": "https://github.com/BenHodgsonR2R/image-tagger/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BenHodgsonR2R/image-tagger.git"
+  },
   "license": "MIT",
   "author": "Ben Hodgson",
   "type": "module",
@@ -24,6 +32,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean:dist": "node -e \"import('node:fs').then((fs) => fs.rmSync('dist', { recursive: true, force: true }))\"",
     "prebuild": "pnpm clean:dist",

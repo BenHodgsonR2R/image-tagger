@@ -1,4 +1,4 @@
-# image-tagger
+# @bhodgson/image-tagger
 
 Tags images from a vocabulary you define. Each category becomes a typed question for a decision model, which returns a probability for every value you allow and nothing else: it can't invent a tag. Answers that name anything outside the vocabulary are rejected.
 
@@ -12,9 +12,13 @@ The default backend is [Amos 1 Large](https://huggingface.co/mukaddamzaid/amos-1
 
 Needs Node.js 22.12 or later.
 
+```bash
+pnpm add @bhodgson/image-tagger
+```
+
 ```ts
 import { readFile } from "node:fs/promises";
-import { AmosBackend, Tagger } from "image-tagger";
+import { AmosBackend, Tagger } from "@bhodgson/image-tagger";
 
 const tagger = new Tagger({
   backend: new AmosBackend(),
