@@ -1,12 +1,15 @@
+import { createHash } from "node:crypto";
 import {
   type DecisionResponse,
   type ImageInput,
   imageMimeTypes,
   type Question,
-  type QuestionOptions,
   type TaggingBackend,
 } from "./backends/backend.ts";
 import { TaggingError } from "./errors.ts";
+import { type Evaluation, evaluate } from "./evaluate.ts";
+import { readTag, toQuestion } from "./questions.ts";
+import type { DecisionRecord } from "./record.ts";
 import {
   type ResolvedCategory,
   type ResolvedVocabulary,
@@ -58,6 +61,8 @@ export type TaggingResult = {
   /** Applied tags as `category:value`, or the category name for a set flag. */
   labels: readonly string[];
   modelVersion?: string;
+  /** What was asked and answered, as plain JSON, for `evaluate()`. Nothing is stored. */
+  record: DecisionRecord;
 };
 
 type TaggerLogger = Pick<Console, "debug">;
@@ -68,9 +73,6 @@ export type TaggerOptions = {
   debug?: boolean;
   logger?: TaggerLogger;
 };
-
-// Can't collide with a value: tag names allow no underscores.
-const unlistedOption = "__unlisted__";
 
 const defaultContext = "An image to tag.";
 
@@ -107,11 +109,12 @@ export class Tagger {
     );
     this.debug("request", { ...details, questions });
 
+    const sentContext = context?.trim() || defaultContext;
     let response: DecisionResponse;
 
     try {
       response = await this.backend.decide({
-        context: context?.trim() || defaultContext,
+        context: sentContext,
         image,
         questions,
       });
@@ -157,7 +160,36 @@ export class Tagger {
       tags,
       labels: toLabels(tags),
       modelVersion: response.modelVersion,
+      record: {
+        format: 1,
+        id,
+        createdAt: new Date().toISOString(),
+        image: {
+          sha256: createHash("sha256").update(image.data).digest("hex"),
+          mimeType: image.mimeType,
+          bytes: image.data.byteLength,
+        },
+        context: sentContext,
+        questions,
+        answers: Object.fromEntries(
+          questions.map(({ id: question }) => [
+            question,
+            response.answers[question] ?? {},
+          ]),
+        ),
+        model: this.backend.model,
+        modelVersion: response.modelVersion,
+      },
     };
+  }
+
+  /**
+   * Scores saved records against their `expected` answers, applying this
+   * tagger's thresholds to the recorded probabilities. Nothing is sent to
+   * the backend.
+   */
+  evaluate(records: Iterable<DecisionRecord>): Evaluation {
+    return evaluate(this.vocabulary, records);
   }
 
   private selectCategories(
@@ -208,47 +240,6 @@ function assertImage(image: ImageInput, details: RequestDetails): void {
   }
 }
 
-function toQuestion(name: string, category: ResolvedCategory): Question {
-  const label = name.replaceAll("-", " ");
-
-  switch (category.type) {
-    case "single":
-      return {
-        id: name,
-        type: "choice",
-        instructions:
-          category.question ?? `Which ${label} best describes the image?`,
-        options: withUnlisted(
-          category.values,
-          category.allowUnlisted,
-          "None of these fits.",
-        ),
-      };
-    case "multi":
-      return {
-        id: name,
-        type: "multi",
-        instructions:
-          category.question ??
-          `Which of these ${label} apply to the image? Choose none if none apply.`,
-        options: withUnlisted(
-          category.values,
-          category.allowUnlisted,
-          "Something not listed here.",
-        ),
-      };
-  }
-  return { id: name, type: "yes-no", instructions: category.question };
-}
-
-function withUnlisted(
-  values: QuestionOptions,
-  allowUnlisted: boolean,
-  description: string,
-): QuestionOptions {
-  return allowUnlisted ? { ...values, [unlistedOption]: description } : values;
-}
-
 function expectedKeys(question: Question): string[] {
   return question.type === "yes-no" ? ["yes"] : Object.keys(question.options);
 }
@@ -287,52 +278,6 @@ function answerIssues(
   }
 
   return issues;
-}
-
-function readTag(
-  category: ResolvedCategory,
-  answer: Readonly<Record<string, number>>,
-): Tag {
-  if (category.type === "flag") {
-    const probability = answer.yes ?? 0;
-    return {
-      type: "flag",
-      value: probability >= category.threshold,
-      probability,
-    };
-  }
-
-  const probabilities = Object.fromEntries(
-    Object.keys(category.values).map((value) => [value, answer[value] ?? 0]),
-  );
-  const unlisted = category.allowUnlisted
-    ? { unlisted: answer[unlistedOption] ?? 0 }
-    : {};
-  const ranked = Object.entries(probabilities).toSorted(
-    ([, a], [, b]) => b - a,
-  );
-
-  if (category.type === "multi") {
-    return {
-      type: "multi",
-      values: ranked
-        .filter(([, p]) => p >= category.threshold)
-        .map(([value]) => value),
-      probabilities,
-      ...unlisted,
-    };
-  }
-
-  const [best, confidence] = ranked[0] ?? [undefined, 0];
-  const unlistedWins = (unlisted.unlisted ?? 0) > confidence;
-  return {
-    type: "single",
-    value:
-      unlistedWins || confidence < category.minConfidence ? undefined : best,
-    confidence,
-    probabilities,
-    ...unlisted,
-  };
 }
 
 function toLabels(tags: Readonly<Record<string, Tag>>): string[] {

@@ -98,7 +98,7 @@ The vocabulary maps category names to categories. Category and value names use l
 
 ### Requests
 
-`tagger.tag(request)` tags one image and returns `{ id, tags, labels, modelVersion }`.
+`tagger.tag(request)` tags one image and returns `{ id, tags, labels, modelVersion, record }`.
 
 | Field        | Description                                                                    |
 | ------------ | ------------------------------------------------------------------------------ |
@@ -106,6 +106,20 @@ The vocabulary maps category names to categories. Category and value names use l
 | `context`    | What the image is and what it's for. Helps with ambiguous values.              |
 | `categories` | Tag only these categories. Defaults to all of them.                            |
 | `id`         | Your identifier for the image. Returned on the result and in error details.    |
+
+### Evaluating
+
+`record` is plain JSON with the questions asked and the raw answers. Save records, add the right answers under `expected`, and score the tagger against them. Its thresholds apply to the saved answers, so you can try others without calling the model again.
+
+```ts
+const record = {
+  ...result.record,
+  expected: { people: "crowd", setting: ["beach"], night: false },
+};
+const evaluation = tagger.evaluate([record]);
+
+evaluation.categories.people; // { accuracy, coverage, confusion, ... }
+```
 
 ### Backends
 

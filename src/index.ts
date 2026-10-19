@@ -8,6 +8,16 @@ export type {
   TaggingRequest,
   TaggingResult,
 } from "./tagger.ts";
+export type {
+  CategoryEvaluation,
+  Evaluation,
+  FlagEvaluation,
+  MultiEvaluation,
+  Scores,
+  SingleEvaluation,
+  SkippedExpectation,
+} from "./evaluate.ts";
+export type { DecisionRecord, ExpectedValue } from "./record.ts";
 export { TaggingError } from "./errors.ts";
 export type { TaggingErrorCode } from "./errors.ts";
 export { vocabularySchema } from "./vocabulary.ts";
