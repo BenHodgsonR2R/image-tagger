@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   type DecisionResponse,
   type ImageInput,
@@ -6,6 +5,7 @@ import {
   type Question,
   type TaggingBackend,
 } from "./backends/backend.ts";
+import { sha256Hex } from "./encoding.ts";
 import { TaggingError } from "./errors.ts";
 import { type Evaluation, evaluate } from "./evaluate.ts";
 import { readTag, toQuestion } from "./questions.ts";
@@ -165,7 +165,7 @@ export class Tagger {
         id,
         createdAt: new Date().toISOString(),
         image: {
-          sha256: createHash("sha256").update(image.data).digest("hex"),
+          sha256: await sha256Hex(image.data),
           mimeType: image.mimeType,
           bytes: image.data.byteLength,
         },

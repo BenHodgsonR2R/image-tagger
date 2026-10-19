@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { toBase64, utf8Bytes } from "../encoding.ts";
 import { TaggingError } from "../errors.ts";
 import type {
   DecisionRequest,
@@ -121,12 +122,12 @@ export class AmosBackend implements TaggingBackend {
       model: this.model,
       state: context,
       // Plain base64: the hosted amos-1-mini rejects data URLs.
-      images: [Buffer.from(image.data).toString("base64")],
+      images: [toBase64(image.data)],
       questions: Object.fromEntries(
         questions.map((question) => [question.id, toAmosQuestion(question)]),
       ),
     });
-    const bytes = Buffer.byteLength(body);
+    const bytes = utf8Bytes(body);
 
     if (this.maxRequestBytes !== false && bytes > this.maxRequestBytes) {
       throw new TaggingError(
@@ -160,12 +161,14 @@ export class AmosBackend implements TaggingBackend {
 
   private async post(body: string): Promise<unknown> {
     const attempts = this.retry === false ? 1 : this.retry.attempts;
+    // Called unbound: browsers reject window.fetch called as another object's method.
+    const fetch = this.fetch;
 
     for (let attempt = 1; ; attempt++) {
       let response: Response;
 
       try {
-        response = await this.fetch(this.url, {
+        response = await fetch(this.url, {
           method: "POST",
           headers: {
             "content-type": "application/json",
