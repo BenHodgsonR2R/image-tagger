@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bhodgson/design-system": "^0.1.1",
+    "@bhodgson/design-system": "^0.1.2",
     "@bhodgson/image-tagger": "workspace:*",
     "preact": "^10.29.8"
   },
