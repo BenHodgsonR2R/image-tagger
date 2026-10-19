@@ -120,9 +120,8 @@ export class AmosBackend implements TaggingBackend {
     const body = JSON.stringify({
       model: this.model,
       state: context,
-      images: [
-        `data:${image.mimeType};base64,${Buffer.from(image.data).toString("base64")}`,
-      ],
+      // Plain base64: the hosted amos-1-mini rejects data URLs.
+      images: [Buffer.from(image.data).toString("base64")],
       questions: Object.fromEntries(
         questions.map((question) => [question.id, toAmosQuestion(question)]),
       ),

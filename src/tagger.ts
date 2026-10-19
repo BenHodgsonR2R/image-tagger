@@ -120,7 +120,7 @@ export class Tagger {
         throw cause;
       }
       throw new TaggingError(
-        "The backend request failed.",
+        `The backend request failed: ${cause instanceof Error ? cause.message : String(cause)}`,
         "backend-failure",
         details,
         {
