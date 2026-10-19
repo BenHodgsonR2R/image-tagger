@@ -6,6 +6,10 @@
     },
     "example": {
       "project": ["src/**/*.ts"]
+    },
+    "demo": {
+      "entry": ["src/styles.css"],
+      "project": ["src/**/*.{ts,tsx,css}"]
     }
   },
   "tags": ["-lintignore"]
