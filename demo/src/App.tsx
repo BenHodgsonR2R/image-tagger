@@ -203,8 +203,10 @@ export function App() {
           <Panel id="images-heading" title="2. Add images">
             <p class="mb-2 text-sm text-muted">
               Images you add are resized in your browser, then sent straight to
-              Amos's hosted API at api.amos.scira.ai, a third-party service.
-              This site has no server and stores nothing.
+              Amos's hosted API, a third-party service with its own{" "}
+              <Link href="https://amos.scira.ai/privacy/">privacy policy</Link>.
+              This site has no server and stores nothing. Don't add private
+              photos.
             </p>
             <label
               class="mb-3 block cursor-pointer rounded-xl border-2 border-dashed border-line p-5 text-center text-sm font-medium text-muted hover:border-accent"
