@@ -287,6 +287,7 @@ describe("Tagger.tag()", () => {
       "backend-failure",
     );
 
+    expect(error.message).toBe("The backend request failed: socket hang up");
     expect(error.cause).toBe(cause);
     expect(error.details).toEqual({ id: "photo-1", model: "test-model" });
   });

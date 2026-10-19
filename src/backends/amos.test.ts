@@ -70,7 +70,7 @@ describe("AmosBackend.decide()", () => {
     expect(JSON.parse(init?.body as string)).toEqual({
       model: "amos-1-large",
       state: "Lead photo for Getxo.",
-      images: ["data:image/jpeg;base64,AQID"],
+      images: ["AQID"],
       questions: {
         people: {
           type: "choice",
