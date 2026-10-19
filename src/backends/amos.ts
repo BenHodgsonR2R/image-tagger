@@ -230,8 +230,9 @@ function toAmosQuestion(question: Question): Record<string, unknown> {
         instructions: question.instructions,
         criteria: question.options,
       };
+    default:
+      return { type: "noul", instructions: question.instructions };
   }
-  return { type: "noul", instructions: question.instructions };
 }
 
 function isRetryableStatus(status: number): boolean {

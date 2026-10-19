@@ -342,7 +342,8 @@ function toLabels(tags: Readonly<Record<string, Tag>>): string[] {
         return tag.value === undefined ? [] : [`${name}:${tag.value}`];
       case "multi":
         return tag.values.map((value) => `${name}:${value}`);
+      default:
+        return tag.value ? [name] : [];
     }
-    return tag.value ? [name] : [];
   });
 }
