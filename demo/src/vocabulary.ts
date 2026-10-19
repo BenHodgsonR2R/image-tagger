@@ -117,6 +117,17 @@ export function fromVocabulary(vocabulary: Vocabulary): CategoryDraft[] {
   });
 }
 
+/** Whether a category still has a field to fill in. */
+export function isUnfinished(draft: CategoryDraft): boolean {
+  if (draft.name === "") {
+    return true;
+  }
+  if (draft.type === "flag") {
+    return draft.question.trim() === "";
+  }
+  return draft.values.some(({ name }) => name === "");
+}
+
 /** Fields still to fill in. Not mistakes, so they're shown as a to-do, not an error. */
 export function unfinishedFields(drafts: readonly CategoryDraft[]): string[] {
   if (drafts.length === 0) {
