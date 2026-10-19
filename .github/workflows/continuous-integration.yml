@@ -1,0 +1,70 @@
+name: Continuous integration
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Cancel runs for older commits on the same pull request.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Changesets compares against main.
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm format:check
+      - run: pnpm lint:ci
+      - run: pnpm typecheck
+      - run: pnpm knip
+      - run: pnpm build
+      - run: pnpm check:package
+      - run: pnpm --filter image-tagger-example typecheck
+      # Changes to the published package need a changeset. The Version
+      # Packages pull request removes them, so it is skipped.
+      - if: github.head_ref != 'changeset-release/main'
+        run: pnpm changeset status --since=origin/main
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest supported major (see engines) and the one used for development.
+        node-version: [22, 24]
+    name: test (Node ${{ matrix.node-version }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: pnpm test:run
+
+  # Audits the workflows, actions and Dependabot config for security problems.
+  zizmor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          version: "1.30.1"
+          collect: all
+          # Report in the job log and as pull request annotations. Uploading to
+          # code scanning needs GitHub Advanced Security.
+          advanced-security: "false"
+          annotations: "true"

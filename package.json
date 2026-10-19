@@ -1,0 +1,63 @@
+{
+  "name": "image-tagger",
+  "version": "0.1.0",
+  "description": "Tags images from a vocabulary you define, with a decision model that returns a probability for every tag and never invents its own.",
+  "keywords": [
+    "image",
+    "tagging",
+    "classification",
+    "vision",
+    "amos"
+  ],
+  "license": "MIT",
+  "author": "Ben Hodgson",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean:dist": "node -e \"import('node:fs').then((fs) => fs.rmSync('dist', { recursive: true, force: true }))\"",
+    "prebuild": "pnpm clean:dist",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --project unit",
+    "test:run": "vitest run --project unit",
+    "knip": "knip",
+    "prepack": "pnpm build",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "oxlint",
+    "lint:ci": "oxlint --deny-warnings",
+    "lint:fix": "oxlint --fix",
+    "check:package": "publint && attw --pack .",
+    "test:e2e": "vitest run --project e2e"
+  },
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@changesets/cli": "^3.0.3",
+    "@types/node": "^24.13.0",
+    "knip": "^6.37.0",
+    "oxlint": "^1.85.0",
+    "oxlint-tsgolint": "^7.0.2002",
+    "prettier": "^3.9.8",
+    "publint": "^0.3.24",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}

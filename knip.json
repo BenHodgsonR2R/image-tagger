@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "project": ["src/**/*.ts"]
+    },
+    "example": {
+      "project": ["src/**/*.ts"]
+    }
+  },
+  "tags": ["-lintignore"]
+}

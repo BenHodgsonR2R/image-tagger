@@ -1,0 +1,7 @@
+packages:
+  - example
+
+# Dependencies allowed to run install scripts.
+allowBuilds:
+  # Checks its platform binary is installed. Needed by tsx and vitest.
+  esbuild: true
