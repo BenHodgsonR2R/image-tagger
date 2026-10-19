@@ -1,13 +1,11 @@
 name: Release
 
 # Publishes to npm with trusted publishing: npm trusts this workflow, so no
-# token is stored. Releases are paused until the trusted publisher is set up
-# (see docs/releasing.md). To turn them on, replace workflow_dispatch with:
-#
-#   push:
-#     branches:
-#       - main
+# token is stored. See docs/releasing.md.
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions: {}
