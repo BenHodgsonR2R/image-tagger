@@ -143,6 +143,54 @@ describe("AmosBackend.decide()", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  test.each([
+    ["a choice with 256 options", "choice", 256, '"wide" has 256 options'],
+    [
+      "a multi with one option",
+      "multi",
+      1,
+      "Use a flag for a single yes/no value.",
+    ],
+  ] as const)(
+    "refuses %s without sending it",
+    async (_label, type, count, message) => {
+      const fetch = vi.fn<typeof globalThis.fetch>();
+      const options = Object.fromEntries(
+        Array.from({ length: count }, (_, index) => [`v${index}`, null]),
+      );
+
+      const error = await new AmosBackend({ fetch })
+        .decide({
+          ...request,
+          questions: [{ id: "wide", type, instructions: "Which?", options }],
+        })
+        .catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(TaggingError);
+      expect((error as TaggingError).code).toBe("invalid-configuration");
+      expect((error as TaggingError).message).toContain(message);
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
+  test("sends a choice with 255 options", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(async () => json(amosAnswer));
+    const options = Object.fromEntries(
+      Array.from({ length: 255 }, (_, index) => [`v${index}`, null]),
+    );
+
+    await new AmosBackend({ fetch })
+      .decide({
+        ...request,
+        questions: [
+          { id: "wide", type: "choice", instructions: "Which?", options },
+        ],
+      })
+      .catch(() => undefined);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   test("reports an unexpected response shape as invalid-response", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async () =>
       json({ answers: { night: { type: "noul" } } }),

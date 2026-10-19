@@ -104,6 +104,19 @@ export class AmosBackend implements TaggingBackend {
     image,
     questions,
   }: DecisionRequest): Promise<DecisionResponse> {
+    const issues = questions.flatMap(optionCountIssue);
+
+    if (issues.length > 0) {
+      throw new TaggingError(
+        [
+          "Amos can't answer these questions.",
+          ...issues.map((issue) => `- ${issue}`),
+        ].join("\n"),
+        "invalid-configuration",
+        { model: this.model, issues },
+      );
+    }
+
     const body = JSON.stringify({
       model: this.model,
       state: context,
@@ -186,6 +199,27 @@ export class AmosBackend implements TaggingBackend {
       await delay(this.retry, attempt);
     }
   }
+}
+
+const minOptions = 2;
+const maxOptions = 255;
+
+function optionCountIssue(question: Question): string[] {
+  if (question.type === "yes-no") {
+    return [];
+  }
+
+  const count = Object.keys(question.options).length;
+
+  if (count >= minOptions && count <= maxOptions) {
+    return [];
+  }
+  return [
+    `"${question.id}" has ${count} option${count === 1 ? "" : "s"}, but Amos needs ${minOptions} to ${maxOptions}, counting the none-of-these option that allowUnlisted adds.` +
+      (count === 1 && question.type === "multi"
+        ? " Use a flag for a single yes/no value."
+        : ""),
+  ];
 }
 
 function toAmosQuestion(question: Question): Record<string, unknown> {

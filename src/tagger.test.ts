@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 
+import { AmosBackend } from "./backends/amos.ts";
 import type { DecisionResponse, TaggingBackend } from "./backends/backend.ts";
 import { TaggingError } from "./errors.ts";
 import { type TaggingRequest, Tagger } from "./tagger.ts";
@@ -213,6 +214,17 @@ describe("Tagger.tag()", () => {
     });
 
     await expectTaggingError(tagger.tag(request()), "invalid-response");
+  });
+
+  test("passes on a backend's own TaggingError instead of backend-failure", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    const tagger = new Tagger({
+      backend: new AmosBackend({ fetch }),
+      vocabulary: { setting: { type: "multi", values: { beach: null } } },
+    });
+
+    await expectTaggingError(tagger.tag(request()), "invalid-configuration");
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   test("tags only the requested categories", async () => {
