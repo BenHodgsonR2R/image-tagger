@@ -1,7 +1,8 @@
 name: Release
 
-# Releases are paused until the first version is ready. To turn them on, add an
-# NPM_TOKEN repository secret and replace workflow_dispatch with:
+# Publishes to npm with trusted publishing: npm trusts this workflow, so no
+# token is stored. Releases are paused until the trusted publisher is set up
+# (see docs/releasing.md). To turn them on, replace workflow_dispatch with:
 #
 #   push:
 #     branches:
@@ -25,6 +26,8 @@ jobs:
       contents: write
       # Open and update the Version Packages pull request.
       pull-requests: write
+      # Proves this workflow's identity to npm for trusted publishing.
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,4 +50,3 @@ jobs:
           create-github-releases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

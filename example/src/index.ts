@@ -5,7 +5,7 @@ import {
   type ImageMimeType,
   Tagger,
   TaggingError,
-} from "image-tagger";
+} from "@bhodgson/image-tagger";
 
 const mimeTypes: Record<string, ImageMimeType> = {
   ".jpg": "image/jpeg",
