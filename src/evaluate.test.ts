@@ -262,9 +262,9 @@ describe("Tagger.evaluate()", () => {
       ),
     ).toEqual([
       "weather: The category isn't in the vocabulary.",
-      "people: Expected \"lots\" isn't one of the category's values or null.",
-      "setting: Expected \"beach\" isn't a list of the category's values.",
-      'night: Expected "yes" isn\'t true or false.',
+      'people: Expected "lots", but the category needs one of its values, or null.',
+      'setting: Expected "beach", but the category needs a list of its values.',
+      'night: Expected "yes", but the category needs true or false.',
       "night: The question asked differs from the vocabulary's.",
       "people: Unsupported record format 2.",
     ]);

@@ -96,9 +96,11 @@ export function evaluate(
         skip(name, "The question asked differs from the vocabulary's.");
         continue;
       }
-      const problem = expectedProblem(category, expected);
-      if (problem !== undefined) {
-        skip(name, problem);
+      if (!isValidExpected(category, expected)) {
+        skip(
+          name,
+          `Expected ${JSON.stringify(expected)}, but the category needs ${expectedShape[category.type]}.`,
+        );
         continue;
       }
 
@@ -138,26 +140,26 @@ function sortedOptions(options: QuestionOptions): string {
   );
 }
 
-function expectedProblem(
+const expectedShape: Record<ResolvedCategory["type"], string> = {
+  single: "one of its values, or null",
+  multi: "a list of its values",
+  flag: "true or false",
+};
+
+function isValidExpected(
   category: ResolvedCategory,
   expected: ExpectedValue,
-): string | undefined {
-  switch (category.type) {
-    case "single":
-      return expected === null ||
-        (typeof expected === "string" &&
-          Object.hasOwn(category.values, expected))
-        ? undefined
-        : `Expected ${JSON.stringify(expected)} isn't one of the category's values or null.`;
-    case "multi":
-      return Array.isArray(expected) &&
-        expected.every((value) => Object.hasOwn(category.values, value))
-        ? undefined
-        : `Expected ${JSON.stringify(expected)} isn't a list of the category's values.`;
+): boolean {
+  if (category.type === "flag") {
+    return typeof expected === "boolean";
   }
-  return typeof expected === "boolean"
-    ? undefined
-    : `Expected ${JSON.stringify(expected)} isn't true or false.`;
+
+  const isValue = (value: unknown) =>
+    typeof value === "string" && Object.hasOwn(category.values, value);
+
+  return category.type === "multi"
+    ? Array.isArray(expected) && expected.every(isValue)
+    : expected === null || isValue(expected);
 }
 
 function evaluateCategory(
