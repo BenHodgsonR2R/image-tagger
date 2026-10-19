@@ -8,6 +8,8 @@ Tags images from a vocabulary you define. Each category becomes a typed question
 
 The default backend is [Amos 1 Large](https://huggingface.co/mukaddamzaid/amos-1-large), called through its hosted API, which needs no key.
 
+Try it in the [playground](https://benhodgsonr2r.github.io/image-tagger/): define your own tags and tag your own images or the samples.
+
 - [Use the package](#use-the-package)
 - [Develop](#develop)
 - [Reference](#reference)
