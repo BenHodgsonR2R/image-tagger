@@ -14,7 +14,7 @@ The default backend is [Amos 1 Large](https://huggingface.co/mukaddamzaid/amos-1
 
 ## Use the package
 
-Needs Node.js 22.12 or later.
+Runs in Node.js 22.12 or later, and in modern browsers.
 
 ```bash
 pnpm add @bhodgson/image-tagger

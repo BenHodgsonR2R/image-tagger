@@ -48,7 +48,21 @@ function json(body: unknown, status = 200): Response {
 
 const noRetryDelay = { attempts: 3, initialDelay: 0, maxDelay: 0 };
 
+// Like window.fetch: throws when called as a method of another object.
+async function browserFetch(this: unknown): Promise<Response> {
+  if (this !== undefined && this !== globalThis) {
+    throw new TypeError("Illegal invocation");
+  }
+  return json(amosAnswer);
+}
+
 describe("AmosBackend.decide()", () => {
+  test("calls fetch unbound, as browsers require", async () => {
+    await expect(
+      new AmosBackend({ fetch: browserFetch, retry: false }).decide(request),
+    ).resolves.toMatchObject({ modelVersion: "amos-1-large" });
+  });
+
   test("sends a System One request and maps the answers", async () => {
     const fetch = vi.fn<typeof globalThis.fetch>(async () => json(amosAnswer));
     const backend = new AmosBackend({ fetch, userAgent: "image-tagger-test" });
