@@ -2,8 +2,13 @@ packages:
   # The root is the published package. changesets only versions workspace packages.
   - "."
   - example
+  - demo
 
 # Dependencies allowed to run install scripts.
 allowBuilds:
   # Checks its platform binary is installed. Needed by tsx and vitest.
   esbuild: true
+
+# Our own packages, which the demo uses as soon as they are released.
+minimumReleaseAgeExclude:
+  - "@bhodgson/*"

@@ -33,6 +33,8 @@ jobs:
       - run: pnpm build
       - run: pnpm check:package
       - run: pnpm --filter image-tagger-example typecheck
+      - run: pnpm --filter image-tagger-demo typecheck
+      - run: pnpm --filter image-tagger-demo build
       # Changes to the published package need a changeset. The Version
       # Packages pull request removes them, so it is skipped.
       - if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
