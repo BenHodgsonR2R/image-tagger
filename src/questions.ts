@@ -1,6 +1,12 @@
 import type { Question, QuestionOptions } from "./backends/backend.ts";
-import type { Tag } from "./tagger.ts";
+import type { FlagTag, MultiTag, SingleTag, Tag } from "./tagger.ts";
 import type { ResolvedCategory } from "./vocabulary.ts";
+
+export type SingleCategory = Extract<ResolvedCategory, { type: "single" }>;
+export type MultiCategory = Extract<ResolvedCategory, { type: "multi" }>;
+export type FlagCategory = Extract<ResolvedCategory, { type: "flag" }>;
+
+type Answer = Readonly<Record<string, number>>;
 
 // Can't collide with a value: tag names allow no underscores.
 const unlistedOption = "__unlisted__";
@@ -34,8 +40,9 @@ export function toQuestion(name: string, category: ResolvedCategory): Question {
           "Something not listed here.",
         ),
       };
+    default:
+      return { id: name, type: "yes-no", instructions: category.question };
   }
-  return { id: name, type: "yes-no", instructions: category.question };
 }
 
 function withUnlisted(
@@ -46,48 +53,65 @@ function withUnlisted(
   return allowUnlisted ? { ...values, [unlistedOption]: description } : values;
 }
 
-export function readTag(
-  category: ResolvedCategory,
-  answer: Readonly<Record<string, number>>,
-): Tag {
-  if (category.type === "flag") {
-    const probability = answer.yes ?? 0;
-    return {
-      type: "flag",
-      value: probability >= category.threshold,
-      probability,
-    };
+export function readTag(category: ResolvedCategory, answer: Answer): Tag {
+  switch (category.type) {
+    case "single":
+      return readSingle(category, answer);
+    case "multi":
+      return readMulti(category, answer);
+    default:
+      return readFlag(category, answer);
   }
+}
 
-  const probabilities = Object.fromEntries(
-    Object.keys(category.values).map((value) => [value, answer[value] ?? 0]),
-  );
-  const unlisted = category.allowUnlisted
-    ? { unlisted: answer[unlistedOption] ?? 0 }
-    : {};
-  const ranked = Object.entries(probabilities).toSorted(
-    ([, a], [, b]) => b - a,
-  );
-
-  if (category.type === "multi") {
-    return {
-      type: "multi",
-      values: ranked
-        .filter(([, p]) => p >= category.threshold)
-        .map(([value]) => value),
-      probabilities,
-      ...unlisted,
-    };
-  }
-
+export function readSingle(
+  category: SingleCategory,
+  answer: Answer,
+): SingleTag {
+  const { probabilities, ranked, unlisted } = readValues(category, answer);
   const [best, confidence] = ranked[0] ?? [undefined, 0];
-  const unlistedWins = (unlisted.unlisted ?? 0) > confidence;
+  const noneFits = (unlisted.unlisted ?? 0) > confidence;
+
   return {
     type: "single",
-    value:
-      unlistedWins || confidence < category.minConfidence ? undefined : best,
+    value: noneFits || confidence < category.minConfidence ? undefined : best,
     confidence,
     probabilities,
     ...unlisted,
+  };
+}
+
+export function readMulti(category: MultiCategory, answer: Answer): MultiTag {
+  const { probabilities, ranked, unlisted } = readValues(category, answer);
+
+  return {
+    type: "multi",
+    values: ranked
+      .filter(([, probability]) => probability >= category.threshold)
+      .map(([value]) => value),
+    probabilities,
+    ...unlisted,
+  };
+}
+
+export function readFlag(category: FlagCategory, answer: Answer): FlagTag {
+  const probability = answer.yes ?? 0;
+  return {
+    type: "flag",
+    value: probability >= category.threshold,
+    probability,
+  };
+}
+
+function readValues(category: SingleCategory | MultiCategory, answer: Answer) {
+  const probabilities = Object.fromEntries(
+    Object.keys(category.values).map((value) => [value, answer[value] ?? 0]),
+  );
+  return {
+    probabilities,
+    ranked: Object.entries(probabilities).toSorted(([, a], [, b]) => b - a),
+    unlisted: category.allowUnlisted
+      ? { unlisted: answer[unlistedOption] ?? 0 }
+      : {},
   };
 }
