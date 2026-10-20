@@ -1,6 +1,6 @@
 {
   "name": "@bhodgson/image-tagger",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Tags images from a vocabulary you define, with a decision model that returns a probability for every tag and never invents its own.",
   "keywords": [
     "image",
