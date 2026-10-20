@@ -17,6 +17,7 @@ import {
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { maxImages, prepareImage } from "./images.ts";
 import { type ImageItem, ImageResult } from "./Results.tsx";
+import { categoryTones } from "./tones.ts";
 import { SampleGallery } from "./SampleGallery.tsx";
 import { samples } from "./samples.ts";
 import { VocabularyEditor } from "./VocabularyEditor.tsx";
@@ -83,6 +84,7 @@ export function App() {
   const thresholds = Object.fromEntries(
     drafts.map((draft) => [draft.name, draft.threshold]),
   );
+  const tones = categoryTones(drafts.map((draft) => draft.name));
 
   const addFiles = async (files: readonly File[]) => {
     const room = maxImages - images.length;
@@ -181,7 +183,7 @@ export function App() {
             Amos
           </Link>{" "}
           decision model tags them. Built with{" "}
-          <Link href="https://github.com/BenHodgsonR2R/image-tagger">
+          <Link href="https://benhodgsonr2r.github.io/image-tagger/">
             @bhodgson/image-tagger
           </Link>
           .
@@ -297,6 +299,7 @@ export function App() {
                   key={image.id}
                   image={image}
                   thresholds={thresholds}
+                  tones={tones}
                   onRemove={() => removeImage(image)}
                 />
               ))}

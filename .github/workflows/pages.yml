@@ -1,12 +1,13 @@
 name: Pages
 
-# Builds the playground in demo/ and deploys it to GitHub Pages.
+# Builds the docs in docs/, with the playground from demo/ under playground/, and deploys them to GitHub Pages.
 on:
   push:
     branches:
       - main
     paths:
       - demo/**
+      - docs/**
       - src/**
       - package.json
       - pnpm-lock.yaml
@@ -35,11 +36,12 @@ jobs:
         with:
           # A cache written by another workflow could change what is deployed.
           cache: "false"
-      - run: pnpm --filter image-tagger-demo build
+      - run: pnpm --filter image-tagger-docs build
+      - run: pnpm --filter image-tagger-demo build --outDir ../docs/dist/playground --emptyOutDir
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: demo/dist
+          path: docs/dist
 
   deploy:
     needs: build

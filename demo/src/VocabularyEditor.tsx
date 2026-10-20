@@ -7,7 +7,9 @@ import {
   Panel,
   Select,
   TextArea,
+  dataTone,
 } from "@bhodgson/design-system";
+import { type CategoryTone, swatchClass } from "./tones.ts";
 import {
   type CategoryDraft,
   type CategoryType,
@@ -137,10 +139,11 @@ export function VocabularyEditor({ drafts, onChange, problems, todo }: Props) {
 
       {json === undefined ? (
         <>
-          {drafts.map((draft) => (
+          {drafts.map((draft, index) => (
             <CategoryCard
               key={draft.id}
               draft={draft}
+              tone={dataTone(index)}
               expanded={open.has(draft.id)}
               onToggle={() => toggle(draft.id)}
               onChange={(change) => update(draft.id, change)}
@@ -212,6 +215,7 @@ function isCategoryType(value: string): value is CategoryType {
 
 type CardProps = {
   draft: CategoryDraft;
+  tone: CategoryTone;
   expanded: boolean;
   onToggle: () => void;
   onChange: (change: Partial<CategoryDraft>) => void;
@@ -220,6 +224,7 @@ type CardProps = {
 
 function CategoryCard({
   draft,
+  tone,
   expanded,
   onToggle,
   onChange,
@@ -258,6 +263,10 @@ function CategoryCard({
           >
             ›
           </span>
+          <span
+            aria-hidden="true"
+            class={`size-2.5 shrink-0 rounded-sm ${swatchClass[tone]}`}
+          />
           <span class="shrink-0 font-mono text-sm font-semibold whitespace-nowrap">
             {draft.name || "new category"}
           </span>
