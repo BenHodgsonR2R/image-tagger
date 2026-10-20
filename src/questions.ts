@@ -2,9 +2,15 @@ import type { Question, QuestionOptions } from "./backends/backend.ts";
 import type { FlagTag, MultiTag, SingleTag, Tag } from "./tagger.ts";
 import type { ResolvedCategory } from "./vocabulary.ts";
 
-export type SingleCategory = Extract<ResolvedCategory, { type: "single" }>;
-export type MultiCategory = Extract<ResolvedCategory, { type: "multi" }>;
-export type FlagCategory = Extract<ResolvedCategory, { type: "flag" }>;
+export type ResolvedSingleCategory = Extract<
+  ResolvedCategory,
+  { type: "single" }
+>;
+export type ResolvedMultiCategory = Extract<
+  ResolvedCategory,
+  { type: "multi" }
+>;
+export type ResolvedFlagCategory = Extract<ResolvedCategory, { type: "flag" }>;
 
 type Answer = Readonly<Record<string, number>>;
 
@@ -65,7 +71,7 @@ export function readTag(category: ResolvedCategory, answer: Answer): Tag {
 }
 
 export function readSingle(
-  category: SingleCategory,
+  category: ResolvedSingleCategory,
   answer: Answer,
 ): SingleTag {
   const { probabilities, ranked, unlisted } = readValues(category, answer);
@@ -81,7 +87,10 @@ export function readSingle(
   };
 }
 
-export function readMulti(category: MultiCategory, answer: Answer): MultiTag {
+export function readMulti(
+  category: ResolvedMultiCategory,
+  answer: Answer,
+): MultiTag {
   const { probabilities, ranked, unlisted } = readValues(category, answer);
 
   return {
@@ -94,7 +103,10 @@ export function readMulti(category: MultiCategory, answer: Answer): MultiTag {
   };
 }
 
-export function readFlag(category: FlagCategory, answer: Answer): FlagTag {
+export function readFlag(
+  category: ResolvedFlagCategory,
+  answer: Answer,
+): FlagTag {
   const probability = answer.yes ?? 0;
   return {
     type: "flag",
@@ -103,7 +115,10 @@ export function readFlag(category: FlagCategory, answer: Answer): FlagTag {
   };
 }
 
-function readValues(category: SingleCategory | MultiCategory, answer: Answer) {
+function readValues(
+  category: ResolvedSingleCategory | ResolvedMultiCategory,
+  answer: Answer,
+) {
   const probabilities = Object.fromEntries(
     Object.keys(category.values).map((value) => [value, answer[value] ?? 0]),
   );

@@ -8,6 +8,10 @@ import type {
   TaggingBackend,
 } from "./backend.ts";
 
+/**
+ * How {@link AmosBackend} retries failed requests. Default 4 attempts, waiting 1 second at first and at most 30.
+ * @group Backends
+ */
 export type AmosRetryOptions = {
   /** Total attempts, including the first. */
   attempts: number;
@@ -17,10 +21,14 @@ export type AmosRetryOptions = {
   maxDelay: number;
 };
 
+/**
+ * The options for {@link AmosBackend}.
+ * @group Backends
+ */
 export type AmosBackendOptions = {
   /** Server to call. Defaults to the hosted API, which needs no key. */
   baseUrl?: string;
-  /** Defaults to `defaultAmosModel`. */
+  /** Default {@link defaultAmosModel}. Always sent: the hosted API otherwise answers with `amos-1-mini`. */
   model?: string;
   /**
    * Retries for rate limits (429), timeouts (408), server errors (5xx) and
@@ -36,10 +44,19 @@ export type AmosBackendOptions = {
   maxRequestBytes?: number | false;
   /** Sent as the User-Agent header. */
   userAgent?: string;
+  /** Replaces the global `fetch`, such as in tests. */
   fetch?: typeof fetch;
 };
 
+/**
+ * The hosted Amos API, which needs no key.
+ * @group Backends
+ */
 export const defaultAmosBaseUrl = "https://api.amos.scira.ai";
+/**
+ * The model {@link AmosBackend} asks by default: Amos 1 Large.
+ * @group Backends
+ */
 export const defaultAmosModel = "amos-1-large";
 
 const defaultTimeout = 60_000;
@@ -64,7 +81,12 @@ const responseSchema = z.object({
   answers: z.record(z.string(), answerSchema),
 });
 
+/**
+ * Calls Amos 1 Large through its hosted API, which needs no key, or your own `amos.serve` at `baseUrl`.
+ * @group Backends
+ */
 export class AmosBackend implements TaggingBackend {
+  /** The model sent with every request. */
   public readonly model: string;
   private readonly url: string;
   private readonly retry: AmosRetryOptions | false;
@@ -73,6 +95,7 @@ export class AmosBackend implements TaggingBackend {
   private readonly userAgent: string | undefined;
   private readonly fetch: typeof fetch;
 
+  /** Throws a {@link TaggingError} with code `invalid-configuration` for invalid options. */
   constructor({
     baseUrl = defaultAmosBaseUrl,
     model = defaultAmosModel,
@@ -100,6 +123,7 @@ export class AmosBackend implements TaggingBackend {
     this.fetch = fetchImplementation;
   }
 
+  /** Asks Amos about the image. Retries rate limits, timeouts, server errors and network failures, as `retry` allows. */
   async decide({
     context,
     image,

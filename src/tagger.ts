@@ -17,9 +17,14 @@ import {
   type Vocabulary,
 } from "./vocabulary.ts";
 
+/**
+ * One image for {@link Tagger}'s `tag()`.
+ * @group Tagging
+ */
 export type TaggingRequest = {
   /** Your identifier for the image. Returned on the result and in error details. */
   id?: string;
+  /** A JPEG, PNG or WebP image. */
   image: ImageInput;
   /** What the image is and what it's for, such as "Lead photo for a travel guide to Getxo, Spain." */
   context?: string;
@@ -27,61 +32,122 @@ export type TaggingRequest = {
   categories?: readonly string[];
 };
 
+/**
+ * The answer for a {@link SingleCategory}.
+ * @group Tagging
+ */
 export type SingleTag = {
   type: "single";
   /** The chosen value, or `undefined` when none reached `minConfidence` or none fits. */
   value: string | undefined;
   /** Probability of the likeliest listed value. */
   confidence: number;
+  /** Each listed value's probability. They sum to 1. */
   probabilities: Readonly<Record<string, number>>;
   /** Probability that none of the values fits. Only with `allowUnlisted`. */
   unlisted?: number;
 };
 
+/**
+ * The answer for a {@link MultiCategory}.
+ * @group Tagging
+ */
 export type MultiTag = {
   type: "multi";
   /** Values at or above the threshold, likeliest first. */
   values: readonly string[];
+  /** Each listed value's probability, independent of the others. */
   probabilities: Readonly<Record<string, number>>;
   /** Probability that something not listed also applies. Only with `allowUnlisted`. */
   unlisted?: number;
 };
 
+/**
+ * The answer for a {@link FlagCategory}.
+ * @group Tagging
+ */
 export type FlagTag = {
   type: "flag";
+  /** Whether the probability reached the category's `threshold`. */
   value: boolean;
+  /** How likely the answer is yes. */
   probability: number;
 };
 
+/**
+ * One category's answer: a {@link SingleTag}, {@link MultiTag} or {@link FlagTag}, matching the category's `type`.
+ * @group Tagging
+ */
 export type Tag = SingleTag | MultiTag | FlagTag;
 
+/**
+ * What {@link Tagger}'s `tag()` returns.
+ * @group Tagging
+ */
 export type TaggingResult = {
+  /** The request's `id`. */
   id?: string;
+  /** Each category's answer, by category name. */
   tags: Readonly<Record<string, Tag>>;
   /** Applied tags as `category:value`, or the category name for a set flag. */
   labels: readonly string[];
+  /** The exact model that answered, when the backend reports it. */
   modelVersion?: string;
   /** What was asked and answered, as plain JSON, for `evaluate()`. Nothing is stored. */
   record: DecisionRecord;
 };
 
-type TaggerLogger = Pick<Console, "debug">;
+/**
+ * Where {@link Tagger} writes debug logs: anything with a `debug` method, such as `console`.
+ * @group Tagging
+ */
+export type TaggerLogger = Pick<Console, "debug">;
 
+/**
+ * The options for {@link Tagger}.
+ * @group Tagging
+ */
 export type TaggerOptions = {
+  /** Answers the questions, such as an {@link AmosBackend}. */
   backend: TaggingBackend;
+  /** The categories and values the tagger can apply. */
   vocabulary: Vocabulary;
+  /** Logs each request and response. Default `false`. */
   debug?: boolean;
+  /** Where debug logs go. Defaults to `console`. */
   logger?: TaggerLogger;
 };
 
 const defaultContext = "An image to tag.";
 
+/**
+ * Tags images with a {@link TaggingBackend}, asking about each category in a {@link Vocabulary}. The model can
+ * only answer with values you define. Create one and reuse it.
+ * @example
+ * ```ts
+ * const tagger = new Tagger({
+ *   backend: new AmosBackend(),
+ *   vocabulary: {
+ *     setting: { type: "multi", values: { beach: null, mountains: null, city: null } },
+ *     night: { type: "flag", question: "Was the photo taken at night?" },
+ *   },
+ * });
+ *
+ * const result = await tagger.tag({
+ *   image: { data: await readFile("getxo.jpg"), mimeType: "image/jpeg" },
+ *   context: "Lead photo for a travel guide to Getxo, Spain.",
+ * });
+ * result.labels; // ["setting:beach", "setting:city"]
+ * ```
+ * @group Tagging
+ */
 export class Tagger {
   private readonly backend: TaggingBackend;
   private readonly vocabulary: ResolvedVocabulary;
   private readonly debugEnabled: boolean;
   private readonly logger: TaggerLogger;
 
+  /** Checks the vocabulary. Throws a {@link TaggingError} with code `invalid-configuration` if it's invalid. */
   constructor({
     backend,
     vocabulary,
@@ -94,6 +160,10 @@ export class Tagger {
     this.logger = logger;
   }
 
+  /**
+   * Tags one image. Throws a {@link TaggingError} when the image or request is invalid, the backend fails, or its
+   * answers don't match the questions.
+   */
   async tag({
     id,
     image,

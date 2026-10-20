@@ -4,6 +4,7 @@ export type {
   MultiTag,
   SingleTag,
   Tag,
+  TaggerLogger,
   TaggerOptions,
   TaggingRequest,
   TaggingResult,
@@ -21,7 +22,14 @@ export type { DecisionRecord, ExpectedValue } from "./record.ts";
 export { TaggingError } from "./errors.ts";
 export type { TaggingErrorCode } from "./errors.ts";
 export { vocabularySchema } from "./vocabulary.ts";
-export type { Category, Vocabulary } from "./vocabulary.ts";
+export type {
+  Category,
+  CategoryValues,
+  FlagCategory,
+  MultiCategory,
+  SingleCategory,
+  Vocabulary,
+} from "./vocabulary.ts";
 export { imageMimeTypes } from "./backends/backend.ts";
 export type {
   DecisionRequest,
