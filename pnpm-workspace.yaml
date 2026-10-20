@@ -3,6 +3,7 @@ packages:
   - "."
   - example
   - demo
+  - docs
 
 # Dependencies allowed to run install scripts.
 allowBuilds:
@@ -12,3 +13,4 @@ allowBuilds:
 # Our own packages, which the demo uses as soon as they are released.
 minimumReleaseAgeExclude:
   - "@bhodgson/*"
+  - astro@7.4.1

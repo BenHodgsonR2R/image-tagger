@@ -12,7 +12,7 @@
     "node": true,
     "es2024": true
   },
-  "ignorePatterns": ["dist/**", "coverage/**"],
+  "ignorePatterns": ["dist/**", "coverage/**", "docs/.astro/**"],
   "rules": {
     "no-unused-vars": [
       "error",
@@ -79,7 +79,9 @@
         "**/*.test.ts",
         "vitest.config.ts",
         "example/**",
-        "demo/vite.config.ts"
+        "demo/vite.config.ts",
+        "docs/astro.config.mjs",
+        "docs/src/api.ts"
       ],
       "rules": {
         "no-restricted-imports": "off",

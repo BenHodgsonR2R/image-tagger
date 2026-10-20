@@ -1,4 +1,7 @@
-# Releasing
+---
+title: Releasing
+description: How changesets and trusted publishing release the package.
+---
 
 Releases use [Changesets](https://github.com/changesets/changesets) and publish `@bhodgson/image-tagger` to npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers): npm trusts `.github/workflows/release.yml`, so no npm token is stored anywhere, and each version gets a provenance statement linking it to the commit that built it.
 

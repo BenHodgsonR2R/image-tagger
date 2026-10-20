@@ -1,5 +1,6 @@
 import type { Tag, TaggingResult } from "@bhodgson/image-tagger";
-import { Button } from "@bhodgson/design-system";
+import { Badge, Button } from "@bhodgson/design-system";
+import { type CategoryTone, faintBarClass, swatchClass } from "./tones.ts";
 
 export type ImageItem = {
   id: number;
@@ -15,10 +16,11 @@ export type ImageItem = {
 type Props = {
   image: ImageItem;
   thresholds: Readonly<Record<string, number>>;
+  tones: Readonly<Record<string, CategoryTone>>;
   onRemove: () => void;
 };
 
-export function ImageResult({ image, thresholds, onRemove }: Props) {
+export function ImageResult({ image, thresholds, tones, onRemove }: Props) {
   return (
     <article class="grid gap-3 border-t border-line pt-3 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
       <div class="relative">
@@ -49,11 +51,10 @@ export function ImageResult({ image, thresholds, onRemove }: Props) {
                 <li class="text-sm text-muted">No tags applied</li>
               ) : (
                 image.result.labels.map((label) => (
-                  <li
-                    key={label}
-                    class="rounded-full bg-accent-soft px-2.5 py-0.5 font-mono text-xs font-semibold"
-                  >
-                    {label}
+                  <li key={label}>
+                    <Badge tone={tones[label.split(":")[0] ?? ""] ?? "neutral"}>
+                      {label}
+                    </Badge>
                   </li>
                 ))
               )}
@@ -67,6 +68,7 @@ export function ImageResult({ image, thresholds, onRemove }: Props) {
                   key={name}
                   name={name}
                   tag={tag}
+                  tone={tones[name] ?? "data-1"}
                   threshold={thresholds[name] ?? 0.5}
                 />
               ))}
@@ -98,15 +100,23 @@ function Status({ image }: { image: ImageItem }) {
 function TagBars({
   name,
   tag,
+  tone,
   threshold,
 }: {
   name: string;
   tag: Tag;
+  tone: CategoryTone;
   threshold: number;
 }) {
   return (
     <div class="mt-3">
-      <h3 class="mb-1 font-mono text-sm font-semibold">{name}</h3>
+      <h3 class="mb-1 flex items-center gap-1.5 font-mono text-sm font-semibold">
+        <span
+          aria-hidden="true"
+          class={`size-2.5 rounded-sm ${swatchClass[tone]}`}
+        />
+        {name}
+      </h3>
       {barRows(tag).map(({ label, probability, applied }) => (
         <div
           key={label}
@@ -122,7 +132,7 @@ function TagBars({
             aria-valuenow={probability}
           >
             <span
-              class={`absolute inset-y-0 left-0 rounded ${applied ? "bg-accent" : "bg-accent/35"}`}
+              class={`absolute inset-y-0 left-0 rounded ${applied ? swatchClass[tone] : faintBarClass[tone]}`}
               style={{ width: `${probability * 100}%` }}
             />
             {threshold > 0 && (
