@@ -1,27 +1,38 @@
 import type { Question, QuestionOptions } from "./backends/backend.ts";
 import {
-  type FlagCategory,
-  type MultiCategory,
+  type ResolvedFlagCategory,
+  type ResolvedMultiCategory,
   readFlag,
   readMulti,
   readSingle,
-  type SingleCategory,
+  type ResolvedSingleCategory,
   toQuestion,
 } from "./questions.ts";
 import type { DecisionRecord, ExpectedValue } from "./record.ts";
 import type { ResolvedCategory, ResolvedVocabulary } from "./vocabulary.ts";
 
-/** `null` when undefined: no positives predicted (precision) or none expected (recall). */
+/**
+ * Precision, recall and F1 for one value, or a flag's yes. Each is `null` when it can't be worked out, such as precision for a value never given.
+ * @group Evaluation
+ */
 export type Scores = {
   /** Images where the value is expected. */
   support: number;
+  /** Share of the images given the value that expected it. */
   precision: number | null;
+  /** Share of the images that expected the value that were given it. */
   recall: number | null;
+  /** The harmonic mean of precision and recall. */
   f1: number | null;
 };
 
+/**
+ * Scores for a {@link SingleCategory}.
+ * @group Evaluation
+ */
 export type SingleEvaluation = {
   type: "single";
+  /** Images scored. */
   total: number;
   /** Share of images given a value. Below 1 when `minConfidence` or `allowUnlisted` leave some without one. */
   coverage: number;
@@ -33,32 +44,60 @@ export type SingleEvaluation = {
   confusion: Readonly<Record<string, Readonly<Record<string, number>>>>;
 };
 
+/**
+ * Scores for a {@link MultiCategory}.
+ * @group Evaluation
+ */
 export type MultiEvaluation = {
   type: "multi";
+  /** Images scored. */
   total: number;
+  /** Scores for each value. */
   values: Readonly<Record<string, Scores>>;
   /** Mean F1 over the values that have one. */
   macroF1: number | null;
 };
 
+/**
+ * Scores for a {@link FlagCategory}, with yes as the positive answer.
+ * @group Evaluation
+ */
 export type FlagEvaluation = Scores & {
   type: "flag";
+  /** Images scored. */
   total: number;
+  /** Share of images given the expected answer. */
   accuracy: number;
 };
 
+/**
+ * One category's scores, matching the category's `type`.
+ * @group Evaluation
+ */
 export type CategoryEvaluation =
   SingleEvaluation | MultiEvaluation | FlagEvaluation;
 
+/**
+ * An expected answer that `evaluate()` couldn't score.
+ * @group Evaluation
+ */
 export type SkippedExpectation = {
+  /** The record's `id`. */
   id?: string;
+  /** The category it was for. */
   category: string;
+  /** Why it was skipped. */
   reason: string;
 };
 
+/**
+ * How well a {@link Tagger} did on saved records, from its `evaluate()`.
+ * @group Evaluation
+ */
 export type Evaluation = {
   /** Records with at least one scored category. */
   records: number;
+  /** Scores by category name. */
   categories: Readonly<Record<string, CategoryEvaluation>>;
   /** Expected answers that couldn't be scored, and why. */
   skipped: readonly SkippedExpectation[];
@@ -173,7 +212,7 @@ function scorerFor(category: ResolvedCategory): Scorer {
 
 const noValue = "(none)";
 
-function singleScorer(category: SingleCategory): Scorer {
+function singleScorer(category: ResolvedSingleCategory): Scorer {
   const confusion: Record<string, Record<string, number>> = {};
   let total = 0;
   let answered = 0;
@@ -214,7 +253,7 @@ function singleScorer(category: SingleCategory): Scorer {
   };
 }
 
-function multiScorer(category: MultiCategory): Scorer {
+function multiScorer(category: ResolvedMultiCategory): Scorer {
   const counts = new Map(
     Object.keys(category.values).map((value) => [value, new Counts()]),
   );
@@ -253,7 +292,7 @@ function multiScorer(category: MultiCategory): Scorer {
   };
 }
 
-function flagScorer(category: FlagCategory): Scorer {
+function flagScorer(category: ResolvedFlagCategory): Scorer {
   const count = new Counts();
 
   return {
@@ -284,7 +323,7 @@ function f1Of(precision: number | null, recall: number | null): number | null {
 }
 
 function isValue(
-  category: SingleCategory | MultiCategory,
+  category: ResolvedSingleCategory | ResolvedMultiCategory,
   value: unknown,
 ): value is string {
   return typeof value === "string" && Object.hasOwn(category.values, value);

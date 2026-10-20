@@ -5,4 +5,5 @@ export const api = await loadApi({
   entryPoints: ["../src/index.ts"],
   tsconfig: "../tsconfig.json",
   base: `${base}/api/`,
+  groups: ["Tagging", "Vocabulary", "Evaluation", "Backends", "Errors"],
 });
