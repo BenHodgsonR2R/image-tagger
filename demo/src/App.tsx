@@ -35,7 +35,7 @@ import {
   unfinishedFields,
 } from "./vocabulary.ts";
 
-const models = ["amos-1-large", "amos-1-medium", "amos-1-small", "amos-1-mini"];
+const models = ["amos-1-large", "amos-1-medium"];
 const fragmentPrefix = "#v=";
 
 function initialDrafts(): CategoryDraft[] {
