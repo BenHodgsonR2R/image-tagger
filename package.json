@@ -9,13 +9,13 @@
     "vision",
     "amos"
   ],
-  "homepage": "https://github.com/BenHodgsonR2R/image-tagger#readme",
+  "homepage": "https://github.com/bhodgs/image-tagger#readme",
   "bugs": {
-    "url": "https://github.com/BenHodgsonR2R/image-tagger/issues"
+    "url": "https://github.com/bhodgs/image-tagger/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BenHodgsonR2R/image-tagger.git"
+    "url": "git+https://github.com/bhodgs/image-tagger.git"
   },
   "license": "MIT",
   "author": "Ben Hodgson",

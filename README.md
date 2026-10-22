@@ -1,14 +1,14 @@
 # @bhodgson/image-tagger
 
 [![npm](https://img.shields.io/npm/v/@bhodgson/image-tagger)](https://www.npmjs.com/package/@bhodgson/image-tagger)
-[![CI](https://github.com/BenHodgsonR2R/image-tagger/actions/workflows/continuous-integration.yml/badge.svg?branch=main&event=push)](https://github.com/BenHodgsonR2R/image-tagger/actions/workflows/continuous-integration.yml?query=branch%3Amain)
+[![CI](https://github.com/bhodgs/image-tagger/actions/workflows/continuous-integration.yml/badge.svg?branch=main&event=push)](https://github.com/bhodgs/image-tagger/actions/workflows/continuous-integration.yml?query=branch%3Amain)
 [![License: MIT](https://img.shields.io/npm/l/@bhodgson/image-tagger)](LICENSE)
 
 Tags images from a vocabulary you define. Each category becomes a typed question for a decision model, which returns a probability for every value you allow and nothing else: it can't invent a tag. Answers that name anything outside the vocabulary are rejected.
 
 The default backend is [Amos 1 Large](https://huggingface.co/mukaddamzaid/amos-1-large), called through its hosted API, which needs no key.
 
-**[Read the docs](https://benhodgsonr2r.github.io/image-tagger/)** for guides and the API reference, or try the [playground](https://benhodgsonr2r.github.io/image-tagger/playground/): define your own tags and tag your own images or the samples.
+**[Read the docs](https://bhodgs.github.io/image-tagger/)** for guides and the API reference, or try the [playground](https://bhodgs.github.io/image-tagger/playground/): define your own tags and tag your own images or the samples.
 
 ## Use the package
 
@@ -48,7 +48,7 @@ result.labels; // ["people:few", "setting:beach", "setting:city"]
 result.tags.people; // { type: "single", value: "few", confidence: 0.81, probabilities: { ... } }
 ```
 
-Create one `Tagger` and reuse it. Failures throw a `TaggingError`; see [Errors](https://benhodgsonr2r.github.io/image-tagger/guides/errors/).
+Create one `Tagger` and reuse it. Failures throw a `TaggingError`; see [Errors](https://bhodgs.github.io/image-tagger/guides/errors/).
 
 ## Develop
 
