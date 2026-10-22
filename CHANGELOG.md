@@ -1,5 +1,11 @@
 # @bhodgson/image-tagger
 
+## 0.2.1
+
+### Patch Changes
+
+- e6b49bc: The package links point at the renamed GitHub account, `bhodgs`.
+
 ## 0.2.0
 
 ### Minor Changes
