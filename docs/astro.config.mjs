@@ -6,7 +6,7 @@ import { api } from "./src/api.ts";
 import { base } from "./src/site.ts";
 
 export default defineConfig({
-  site: "https://benhodgsonr2r.github.io",
+  site: "https://bhodgs.github.io",
   base,
   integrations: [
     starlight({
@@ -18,12 +18,11 @@ export default defineConfig({
         {
           icon: "github",
           label: "GitHub",
-          href: "https://github.com/BenHodgsonR2R/image-tagger",
+          href: "https://github.com/bhodgs/image-tagger",
         },
       ],
       editLink: {
-        baseUrl:
-          "https://github.com/BenHodgsonR2R/image-tagger/edit/main/docs/",
+        baseUrl: "https://github.com/bhodgs/image-tagger/edit/main/docs/",
       },
       plugins: [docsTheme()],
       sidebar: [

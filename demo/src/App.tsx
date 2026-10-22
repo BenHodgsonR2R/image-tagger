@@ -183,7 +183,7 @@ export function App() {
             Amos
           </Link>{" "}
           decision model tags them. Built with{" "}
-          <Link href="https://benhodgsonr2r.github.io/image-tagger/">
+          <Link href="https://bhodgs.github.io/image-tagger/">
             @bhodgson/image-tagger
           </Link>
           .
